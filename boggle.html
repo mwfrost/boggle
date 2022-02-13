@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- Internal styles -->
+    <style>
+        #lettergrid {
+            font-family: 'DejaVu Sans Mono', monospace;
+            font-size: 4em;
+            line-height: 1em;
+        }
+    </style>
+
+    <title>Boggle Graph</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<script type="text/javascript">
+    $(document).ready(
+        function () {
+            //constants
+            const GRID_WIDTH = 4;
+            const GRID_HEIGHT = 4;
+            const USE_QU_SQUARE = false;
+            const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+            // style the objects according to the constants
+            $('#lettergrid').attr('cols', GRID_WIDTH );
+            $('#lettergrid').attr('rows', GRID_HEIGHT);
+            var letters = getLetters();
+
+            // functions
+            function getLetters() {
+                // generate an array of strings whose keys reflect 
+                // their x,y coordinates
+                var letters = [];
+                var letterCount = GRID_HEIGHT * GRID_WIDTH;
+                for (var i = 0; i < letterCount; i++) {
+                    letters.push(
+                        ALPHABET.charAt(Math.floor(Math.random() *
+                            ALPHABET.length))
+                    );
+                }
+                return letters;
+            }
+
+            function getCoordinatesByKey(letters, key) {
+                // modulo syntax from 
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder
+                y = ((key % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT;
+                x = Math.floor(key / GRID_WIDTH);
+                return [x, y]
+            }
+
+            function fillGrid() {
+                displayLetters = "";
+
+                for (var r = 0; r < GRID_HEIGHT ; r++) {
+                    displayLetters = displayLetters + letters.slice(r * GRID_WIDTH, r * GRID_WIDTH + GRID_WIDTH).join("")+"\n" ;
+                }
+                return displayLetters;
+            }
+
+            let fetchWordList = new Promise((resolve, reject) => {
+                setTimeout(function () {
+                    resolve(
+                        "am, be, do, is,as, an, at, by, in, no, of, on, so, to, up,he, it, me, us, we"
+                        )
+                }, 250)
+            })
+
+            $('#populate').click(function () {
+                var grid = fillGrid();
+                $('#lettergrid').html(grid);
+            });
+        });
+</script>
+</head>
+
+<body>
+    <main role="main" class="container">
+
+        <div class="starter-template">
+            <h1>Boggletron 3000</h1>
+            <div id="populate" class="lead">Click here to populate the grid</div>
+            <textarea id="lettergrid"></textarea>
+        </div>
+
+
+    </main>
+
+</body>
+
+</html>
