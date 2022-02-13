@@ -35,10 +35,12 @@
             // style the objects according to the constants
             $('#lettergrid').attr('cols', GRID_WIDTH );
             $('#lettergrid').attr('rows', GRID_HEIGHT);
-            var letters = getLetters();
 
             // functions
-            function getLetters() {
+            class LetterGrid{
+                // using a constructor instead of just declaring the function
+                // allows repeated reshuffling
+                constructor() {
                 // generate an array of strings whose keys reflect 
                 // their x,y coordinates
                 var letters = [];
@@ -49,10 +51,12 @@
                             ALPHABET.length))
                     );
                 }
-                return letters;
+                this.letters = letters;
             }
-
+            }
+            
             function getCoordinatesByKey(letters, key) {
+                // given a grid cell's key, return its x,y Cartesian location
                 // modulo syntax from 
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder
                 y = ((key % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT;
@@ -60,13 +64,36 @@
                 return [x, y]
             }
 
+            function getKeyByCoordinates(letters, x, y) {
+                // given an x,y Cartesian location, return the key of the letter
+                key = x * GRID_WIDTH + y
+                return key
+            }
+
             function fillGrid() {
+                // turn the array of letters into a series of rows
                 displayLetters = "";
+                
+                for (var k = 0; k < GRID_WIDTH * GRID_HEIGHT ; k++){
+                    xy = getCoordinatesByKey(letters, k)
+                    console.log("k of " + k + " has coords of " + xy)
+                    console.log(getKeyByCoordinates(letters, xy[0], xy[1]))
+                }
 
                 for (var r = 0; r < GRID_HEIGHT ; r++) {
                     displayLetters = displayLetters + letters.slice(r * GRID_WIDTH, r * GRID_WIDTH + GRID_WIDTH).join("")+"\n" ;
                 }
                 return displayLetters;
+            }
+
+            function buildAdjacency(letters){
+                // for each key in the array, identify 
+                // which other keys it can be adjacent to
+                const graph = {}
+                // iterate through the keys, assigning adjacent keys
+                for (var k = 0; k < GRID_WIDTH * GRID_HEIGHT ; k++){
+                    
+                }
             }
 
             let fetchWordList = new Promise((resolve, reject) => {
@@ -78,6 +105,8 @@
             })
 
             $('#populate').click(function () {
+                letterGrid = new LetterGrid();
+                letters = letterGrid.letters;
                 var grid = fillGrid();
                 $('#lettergrid').html(grid);
             });
