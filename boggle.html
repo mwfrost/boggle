@@ -149,7 +149,7 @@
 
             
 
-            $('#populate').click(function () {
+            $('#shuffle').click(function () {
                 letterGrid = new LetterGrid();
                 
                 letters = letterGrid.letters;
@@ -167,7 +167,7 @@
             <h1>Boggletron 3000</h1>
             <div class="row mb-3">
                 <div class="col-4">
-                    <div id="populate" class="lead">Click here to shuffle the grid</div>
+                    <button id="shuffle" class="lead">Click here to shuffle</button>
                     <textarea id="lettergrid"></textarea>
                 </div>
                 <div class="col-4 themed-grid-col"><p id="wordlist"></p></div>
