@@ -42,13 +42,17 @@
             // style the objects according to the constants
             $('#lettergrid').attr('cols', GRID_WIDTH);
             $('#lettergrid').attr('rows', GRID_HEIGHT);
+            $('#wordbox').css('min-height', '300px');
+
             $('#wordbox').on('input', function () {
                 newlist = $('#wordbox').val();
                 wordlist = newlist.toUpperCase().split(",");
             });
 
             // initialize the words to search for
-            var wordlist = "am,be,do,is,as,an,at,by,in,no,of,on,so,to,up,he,it,me,us,we".toUpperCase().split(",");
+            var wordlist =
+                "about,all,also,and,as,at,be,because,but,by,can,come,could,day,do,even,find,first,for,from,get,give,go,have,he,her,here,him,his,how,I,if,in,into,it,its,just,know,like,look,make,man,many,me,more,my,new,no,not,now,of,on,one,only,or,other,our,out,people,say,see,she,so,some,take,tell,than,that,the,their,them,then,there,these,they,thing,think,this,those,time,to,two,up,use,very,want,way,we,well,what,when,which,who,will,with,would,year,you,your"
+                .toUpperCase().split(",");
             var node = document.createTextNode(wordlist.join(", "));
 
             $('#wordbox').html(wordlist.join(","));
@@ -134,19 +138,20 @@
                             if (this.letters[neighbor] == nextLetter) {
                                 visited.push(neighbor);
                                 console.log("nextLetter " + nextLetter + " was matched in " + neighbors +
-                                    " at cell " + neighbor + ", making " + letterGrid.cells_to_string(visited));
+                                    " at cell " + neighbor + ", making " + letterGrid.cells_to_string(
+                                        visited));
 
-                                    if (letterGrid.cells_to_string(visited) === word) {
-                                        console.log("'" + letterGrid.cells_to_string(visited) + " matches " + word)
-                                        letterGrid.foundWords.push(letterGrid.cells_to_string(visited));
-                                        $('#found-words').html(letterGrid.foundWords.join(","));
-                                        return true;
-                                    }
+                                if (letterGrid.cells_to_string(visited) === word) {
+                                    console.log("'" + letterGrid.cells_to_string(visited) + " matches " + word)
+                                    letterGrid.foundWords.push(letterGrid.cells_to_string(visited));
+                                    $('#found-words').html(letterGrid.foundWords.join(","));
+                                    return true;
+                                }
                                 // the next letter was found, exit the loop of neighbors,
                                 // returning to the loop of letters
                                 startCell = neighbor;
                                 break;
-                                
+
                             }
                         }
                     }
@@ -310,13 +315,13 @@
 
         <h1>Boggletron 3000</h1>
         <div class="row mb-3">
-            <div class="col-2">
+            <div class="col-4">
                 <div class="row">
                     <button id="shuffle" class="lead">Shuffle</button>
                     <textarea id="lettergrid"></textarea>
                 </div>
             </div>
-            <div class="col-2">
+            <div class="col-4">
                 <div class="row">
                     <button id="search" class="lead">Search</button>
                     <textarea id="wordbox"></textarea>
@@ -326,7 +331,7 @@
                 </div>
 
             </div>
-            <div class="col-4">
+            <div class="col-2">
                 <div class="row">
                     <h3>Found Words:</h3>
                     <p id="found-words">
