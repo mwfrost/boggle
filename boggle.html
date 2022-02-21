@@ -23,6 +23,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <script type="text/javascript">
+
     $(document).ready(
         function () {
             //constants
@@ -34,6 +35,21 @@
             // style the objects according to the constants
             $('#lettergrid').attr('cols', GRID_WIDTH );
             $('#lettergrid').attr('rows', GRID_HEIGHT);
+
+            // initialize the words to search for
+            var wordlist = "am,be,do,is,as,an,at,by,in,no,of,on,so,to,up,he,it,me,us,we".toUpperCase().split(",");
+            var maxLetterCount = Math.max(...(wordlist.map(el => el.length)));
+            var node = document.createTextNode(wordlist.join(", "));
+
+            $('#wordbox').html(wordlist.join(","));
+
+            $('#wordbox').on('input', function() {
+                newlist = $('#wordbox').val();
+                wordlist = newlist.toUpperCase().split(",");
+                var maxLetterCount = Math.max(...(wordlist.map(el => el.length)));
+                console.log(maxLetterCount);
+                });
+            
 
             // functions
             class LetterGrid{
@@ -50,10 +66,70 @@
                             ALPHABET.length))
                     );
                 }
+                letters[0]="A";
+                letters[1]="M";
                 this.letters = letters;
+                this.foundWords = [];
+                this.visitedPaths = [];
             }
             }
-            
+
+            LetterGrid.prototype.cells_to_string = function(cells){
+                letters = [];
+                cells.forEach(cell => letters.push(this.letters[cell]));
+                return letters.join("");
+            }
+
+
+
+            // Recursively visit each node's first adjacent node
+
+            LetterGrid.prototype.search_deep_path = function(path) {
+                // See if the path argument matches a word before appending any nodes
+                let pathstring = this.cells_to_string(path);
+                console.log("Checking for string '" + pathstring + "'");
+                found = wordlist.includes(pathstring);
+                if (found){
+                    console.log(pathstring + " found");
+                    this.foundWords.push(pathstring);
+                }
+                // record that the path was visited
+                this.visitedPaths.push(path);
+
+                // determine the potential paths from the tip of the current path
+                var lastnode = path[path.length - 1];
+
+                // get the array of cells adjacent to the last node,
+                // excluding any adjacent cells that have been visited. 
+                // (previously visited cells are in the `path` argument)
+                // TODO: a custom Path object could have the adjacency searching
+                // as a prototype function
+                adjacentcells = adjacencyGraph.get(lastnode).filter(x => !path.includes(x));
+                console.log(path + " --> " + adjacentcells);
+
+                // If adjacent nodes are still available and the path has not grown
+                // longer than the longest word, add the first of the adjacent cells 
+                // to the path and run the search on the new path
+                if (adjacentcells.length > 0 & path.length < maxLetterCount){
+                    for (var i = 0, ii = adjacentcells.length; i < ii; ++i) {
+                        var adjacentcell = adjacentcells.shift();
+                        // copy the original path
+                        var newpath = path.slice(0);
+                        newpath.push(adjacentcell);
+                        console.log(newpath + " --> " + adjacentcells);
+                        this.search_deep_path(newpath);
+                    }
+                }
+                else {
+                    console.log("Path exhausted, backtracking in search of fresh adjacencies");
+                }
+                    
+                // 
+                $('#found-words').html(this.foundWords.join(","));
+                return;               
+
+            }
+
             function getCoordinatesByKey(key) {
                 // given a grid cell's key, return its x,y Cartesian location
                 // modulo syntax from 
@@ -65,7 +141,7 @@
 
             function getKeyByCoordinates(x, y) {
                 // given an x,y Cartesian location, return the key of the letter
-                key = x * GRID_WIDTH + y
+                key = x + (GRID_WIDTH * y)
                 return key
             }
 
@@ -75,6 +151,7 @@
                 keyCoordinates.set(k, getCoordinatesByKey(k));
             }
 
+            
             function getAdjacentCoordinates(rowcol){
                 row=rowcol[0]
                 col=rowcol[1]
@@ -95,6 +172,7 @@
                 }
                 return validpairs;
             }
+
             function fillGrid() {
                 // turn the array of letters into a series of rows
                 displayLetters = "";
@@ -121,41 +199,44 @@
                     graph.set(k, adjacentkeys);
                 }
                 return graph;
-            }
-
-            // initialize the words to search for
-            let wordlistpromise = new Promise(function (resolve, reject) {
-                    resolve("am, be, do, is, as, an, at, by, in, no, of, on, so, to, up,he, it, me, us, we");
-                    
-                    reject("There was an error building the word list.");
-                });
-            
-            wordlistpromise.then(function(value) {
-                var node = document.createTextNode(value);
-                $('#wordlist').append(node);
-                });
-            
-
-            console.log($('#wordlist').innerHTML);
+            }            
 
             // build the adjacency graph on page load, not on click
-            adjacencyGraph = buildAdjacency();
+            const adjacencyGraph = buildAdjacency();
+            console.log("adjacencyGraph:");
             console.log(adjacencyGraph);
 
             letterGrid = new LetterGrid();
             var letters = letterGrid.letters;
             var grid = fillGrid();
             $('#lettergrid').html(grid);
-
-            
+            letterlist = letterGrid.cells_to_string([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
+            // rendering the grid to the console:
+            for (var l = 0; l < GRID_HEIGHT ; l++){
+                console.log(letterlist.slice(l * GRID_HEIGHT, l * GRID_HEIGHT + GRID_WIDTH))
+            }
 
             $('#shuffle').click(function () {
                 letterGrid = new LetterGrid();
                 
                 letters = letterGrid.letters;
+                console.log("shuffled:");
+                console.log(letters);
                 var grid = fillGrid();
                 $('#lettergrid').html(grid);
             });
+
+            $('#search').click(function () {
+                for (entry of adjacencyGraph.entries()){
+                    console.log(entry);
+                    letterGrid.search_deep_path([entry[0],])
+                }
+                
+            });
+            
+            
+                
+
         });
 </script>
 </head>
@@ -166,12 +247,28 @@
         
             <h1>Boggletron 3000</h1>
             <div class="row mb-3">
-                <div class="col-4">
-                    <button id="shuffle" class="lead">Click here to shuffle</button>
+                <div class="col-2">
+                    <div class="row">
+                    <button id="shuffle" class="lead">Shuffle</button>
                     <textarea id="lettergrid"></textarea>
                 </div>
-                <div class="col-4 themed-grid-col"><p id="wordlist"></p></div>
-                <div class="col-4">Right column</div>
+                </div>
+                <div class="col-2">
+                    <div class="row">
+                    <button id="search" class="lead">Search</button>
+                    <textarea id="wordbox"></textarea>
+                    </div>
+                    
+                </div>
+                <div class="col-4">
+                    <div class="row">
+                    <h3>Found Words:</h3>
+                    <p id="found-words">
+
+                    </p>
+                </div>
+                </div>
+                
               </div>
         </div>
     </main>
