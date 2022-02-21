@@ -58,7 +58,7 @@
                 wordlist = newlist.toUpperCase().split(",");
             });
 
-            
+
             class LetterGrid {
                 // Define the board object and its data
 
@@ -84,7 +84,7 @@
                 }
             }
 
-            
+
             LetterGrid.prototype.cells_to_string = function (cells) {
                 // convert cell index numbers to the corresponding letters
                 letters = [];
@@ -98,14 +98,14 @@
                 this.letters = letterArray.slice(0);
             }
 
-            LetterGrid.prototype.find_word = function(word) {
+            LetterGrid.prototype.find_word = function (word) {
                 // Look for each word in the grid, return true if it has a path
 
                 // First Pass:
                 // before doing any graph traversal, 
                 // make sure that all the letters in
                 // the word are in the grid. 
-                wordLetters=Array.from(word);
+                wordLetters = Array.from(word);
                 // TODO: check for the right number of each letter
                 missingLetters = wordLetters.filter(x => !this.letters.includes(x));
                 if (missingLetters.length > 0) {
@@ -117,8 +117,8 @@
 
                 // There could be several cells where the word could start
                 startCells = [];
-                for (k of this.letters.keys()){
-                    if (this.letters[k] === wordLetters[0]){
+                for (k of this.letters.keys()) {
+                    if (this.letters[k] === wordLetters[0]) {
                         startCells.push(k)
                     }
                 }
@@ -131,15 +131,16 @@
                         var neighbors = adjacencyGraph.get(startCell).filter(x => !visited.includes(x));
                         var neighborLetters = letterGrid.cells_to_string(neighbors);
 
-                        var nextLetter = wordLetters[l+1]
-                        
+                        var nextLetter = wordLetters[l + 1]
+
                         // can the word's next letter be found in the adjacent and unused neighbors?
                         // console.log("looking for " + nextLetter + " to follow " + wordLetters[l] + " in " + neighbors + " (" + neighborLetters + ")");
 
                         for (neighbor of neighbors) {
                             if (this.letters[neighbor] == nextLetter) {
-                                console.log("nextLetter " + nextLetter + " was matched in " + neighbors + " at cell " + neighbor);
-                                visited.push( neighbor );
+                                console.log("nextLetter " + nextLetter + " was matched in " + neighbors +
+                                    " at cell " + neighbor);
+                                visited.push(neighbor);
                                 // the next letter was found
                                 startCell = neighbor;
                                 console.log(letterGrid.cells_to_string(visited));
@@ -151,7 +152,7 @@
                             $('#found-words').html(letterGrid.foundWords.join(","));
                             return true;
                         }
-                        
+
                     }
 
                 }
@@ -211,7 +212,7 @@
                 return validpairs;
             }
 
-            LetterGrid.prototype.fill_grid = function() {
+            LetterGrid.prototype.fill_grid = function () {
                 // turn the array of letters into a series of rows
                 displayLetters = "";
 
@@ -220,7 +221,8 @@
                 }
 
                 for (var r = 0; r < GRID_HEIGHT; r++) {
-                    displayLetters = displayLetters + this.letters.slice(r * GRID_WIDTH, r * GRID_WIDTH + GRID_WIDTH)
+                    displayLetters = displayLetters + this.letters.slice(r * GRID_WIDTH, r * GRID_WIDTH +
+                            GRID_WIDTH)
                         .join("") + "\n";
                 }
                 return displayLetters;
@@ -251,30 +253,21 @@
             var letters = letterGrid.letters;
             var grid = letterGrid.fill_grid();
             $('#lettergrid').html(grid);
-            
-            letterlist = letterGrid.cells_to_string([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
-            // rendering the grid to the console:
-            for (var l = 0; l < GRID_HEIGHT; l++) {
-                console.log(letterlist.slice(l * GRID_HEIGHT, l * GRID_HEIGHT + GRID_WIDTH))
-            }
 
             $('#lettergrid').on('input', function () {
                 // Check whether the grid's contents can be a valid aray of letters
-                var inputLetters =  $('#lettergrid').val().replace(/(\r\n|\n|\r)/gm,""); 
+                var inputLetters = $('#lettergrid').val().replace(/(\r\n|\n|\r)/gm, "");
                 console.log(inputLetters.length);
-                if (inputLetters.length == GRID_HEIGHT * GRID_WIDTH){
+                if (inputLetters.length == GRID_HEIGHT * GRID_WIDTH) {
                     $('#lettergrid').css("background-color", "white");
                     // Update the letters of the grid when the box contains the right number
                     letterGrid.set_letters(inputLetters);
                     var grid = letterGrid.fill_grid();
                     $('#search').prop('disabled', false);
-                }
-                else{
+                } else {
                     $('#search').prop('disabled', true);
                     $('#lettergrid').css("background-color", "yellow");
                 }
-                
-                
             });
 
             $('#shuffle').click(function () {
@@ -291,7 +284,7 @@
                 $('#found-words').html("");
                 newlist = $('#wordbox').val();
                 wordlist = newlist.toUpperCase().split(",");
-                for (word of wordlist){
+                for (word of wordlist) {
                     console.log(word);
                     letterGrid.find_word(word);
                 }
