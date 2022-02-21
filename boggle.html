@@ -29,18 +29,21 @@
     $(document).ready(
         function () {
             //constants
-            const GRID_WIDTH = 2;
-            const GRID_HEIGHT = 2;
+            const GRID_WIDTH = 4;
+            const GRID_HEIGHT = 4;
             const USE_QU_SQUARE = false;
             const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
             // style the objects according to the constants
             $('#lettergrid').attr('cols', GRID_WIDTH);
             $('#lettergrid').attr('rows', GRID_HEIGHT);
+            $('#wordbox').on('input', function () {
+                newlist = $('#wordbox').val();
+                wordlist = newlist.toUpperCase().split(",");
+            });
 
             // initialize the words to search for
             var wordlist = "am,be,do,is,as,an,at,by,in,no,of,on,so,to,up,he,it,me,us,we".toUpperCase().split(",");
-            var maxLetterCount = Math.max(...(wordlist.map(el => el.length)));
             var node = document.createTextNode(wordlist.join(", "));
 
             $('#wordbox').html(wordlist.join(","));
@@ -48,8 +51,6 @@
             $('#wordbox').on('input', function () {
                 newlist = $('#wordbox').val();
                 wordlist = newlist.toUpperCase().split(",");
-                var maxLetterCount = Math.max(...(wordlist.map(el => el.length)));
-                console.log(maxLetterCount);
             });
 
 
@@ -82,22 +83,96 @@
                 return letters.join("");
             }
 
-            function dfs(start, visited = new Set()) {
-                visited.add(start);
-                const neighbors = adjacencyGraph.get(start);
+            // standard graph algorithms (BFS, DFS) are not efficient because 
+            // of the exponential increase in cost as the grid expands.
+            // Finding EVERY route through a graph is expensive. 
 
-                for (const neighbor of neighbors) {
-                    pathString = letterGrid.cells_to_string(visited);
-                    console.log(pathString);
-                    if (wordlist.includes(pathString)) {
-                        console.log(pathString + " found");
-                        letterGrid.foundWords.push(pathString);
-                        $('#found-words').html(letterGrid.foundWords.join(","));
+            // Instead, we will try each word
+            LetterGrid.prototype.find_word = function(word) {
+                // First Pass:
+                // before doing any graph traversal, 
+                // make sure that all the letters in
+                // the word are in the grid
+                wordLetters=Array.from(word);
+                // TODO: check for the right number of each letter
+                missingLetters = wordLetters.filter(x => !this.letters.includes(x));
+                if (missingLetters.length > 0) {
+                    console.log("Skipping " + word + ": missing from the grid: " + missingLetters);
+                    return false;
+                }
+                // The grid contains the letters somewhere, so now start testing adjacency
+                // There could be several cells where the word could start
+                startCells = [];
+                for (k of this.letters.keys()){
+                    if (this.letters[k] === wordLetters[0]){
+                        startCells.push(k)
+                    }
+                }
+                console.log("Searching for '" + word + "'");
+
+                console.log("Starting letter " + wordLetters[0] + " found in " + startCells);
+                // Try to build the word from each potential starting point
+                for (startCell of startCells) {
+                    visited = [startCell];
+
+                    for (var l = 0; l < wordLetters.length; l++) {
+                        var neighbors = adjacencyGraph.get(startCell).filter(x => !visited.includes(x));
+                        var neighborLetters = letterGrid.cells_to_string(neighbors);
+
+                        var nextLetter = wordLetters[l+1]
+                        
+                        // can the word's next letter be found in the adjacent and unused neighbors?
+                        console.log("looking for " + nextLetter + " to follow " + wordLetters[l] + " in " + neighbors + " (" + neighborLetters + ")");
+
+                        for (neighbor of neighbors) {
+                            if (this.letters[neighbor] == nextLetter) {
+                                console.log("nextLetter " + nextLetter + " was matched in " + neighbors);
+                                visited.push( neighbor );
+                                // the next letter was found
+                                startCell = neighbor;
+                                console.log(letterGrid.cells_to_string(visited));
+
+                            }
+                        }
+                        if (letterGrid.cells_to_string(visited) == word) {
+                            letterGrid.foundWords.push(letterGrid.cells_to_string(visited));
+                            $('#found-words').html(letterGrid.foundWords.join(","));
+                            return true;
+                        }
+                        
                     }
 
+                }
+
+
+            }
+
+            function dfs(start, visited = new Set()) {
+                // adapted from https://fireship.io/courses/javascript/interview-graphs/
+                visited.add(root);
+                // the neighbors are the adjacent nodes,
+                // exclusive of the ones that have already been visited
+                const neighbors = adjacencyGraph.get(root).filter(x => !visited.has(x));
+
+                let pathString = letterGrid.cells_to_string(visited);
+                console.log(pathString);
+
+                // if the current path is a match, score it
+                if (wordlist.includes(pathString)) {
+                    console.log(pathString + " found");
+                    letterGrid.foundWords.push(pathString);
+                    $('#found-words').html(letterGrid.foundWords.join(","));
+                }
+                for (const neighbor of neighbors) {
+                    console.log(Array.from(visited).join(":") + " --> " + neighbor);
+                    // loop over the neighbors of the current root node 
                     if (!visited.has(neighbor)) {
+                        // if neighbor is not in the list of visited nodes, 
                         // keep pursuing the chain of first-neighbor adjacencies
                         dfs(neighbor, visited);
+                    }
+                    else {
+                        console.log("all neighbors of node " + root + " have been visited")
                     }
 
                 }
@@ -105,57 +180,7 @@
             }
             // Recursively visit each node's first adjacent node
 
-            LetterGrid.prototype.search_deep_path = function (path) {
-                // TODO: clean up this scoping issue
-                var maxLetterCount = Math.max(...(wordlist.map(el => el.length)));
 
-                // See if the path argument matches a word before appending any nodes
-                let pathstring = this.cells_to_string(path);
-                console.log("Checking for string '" + pathstring + "'");
-                found = wordlist.includes(pathstring);
-                if (found) {
-                    console.log(pathstring + " found");
-                    this.foundWords.push(pathstring);
-                }
-                // record that the path was visited
-                this.visitedPaths.push(path);
-
-                // determine the potential paths from the tip of the current path
-                var lastnode = path[path.length - 1];
-
-                // get the array of cells adjacent to the last node,
-                // excluding any adjacent cells that have been visited. 
-                // (previously visited cells are in the `path` argument)
-                // TODO: a custom Path object could have the adjacency searching
-                // as a prototype function
-                adjacentcells = adjacencyGraph.get(lastnode).filter(x => !path.includes(x));
-                console.log(path + " --> " + adjacentcells);
-
-                // If adjacent nodes are still available and the path has not grown
-                // longer than the longest word, add the first of the adjacent cells 
-                // to the path and run the search on the new path
-                if (adjacentcells.length == 0 || path.length == maxLetterCount) {
-                    if (adjacentcells.length == 0) {
-                        console.log("No adjacent cells remain");
-                    }
-                    if (path.length == maxLetterCount) {
-                        console.log("Reached max string length of " + maxLetterCount);
-                    }
-                    return;
-                } else {
-                    console.log("Searching first adjacent node");
-                    var adjacentcell = adjacentcells.shift();
-                    newpath = path.slice(0);
-                    newpath.push(adjacentcell);
-                    console.log(newpath + " --> " + adjacentcells);
-                    this.search_deep_path(newpath);
-                }
-
-                // 
-                $('#found-words').html(this.foundWords.join(","));
-                return;
-
-            }
 
             function getCoordinatesByKey(key) {
                 // given a grid cell's key, return its x,y Cartesian location
@@ -264,17 +289,19 @@
             $('#search').click(function () {
                 letterGrid.foundWords = [];
                 $('#found-words').html("");
-                for (entry of adjacencyGraph.entries()) {
-                    console.log(entry);
-                    //letterGrid.search_deep_path([entry[0],])
-                    dfs(entry[0])
+                newlist = $('#wordbox').val();
+                wordlist = newlist.toUpperCase().split(",");
+                for (word of wordlist){
+                    console.log(word);
+                    letterGrid.find_word(word);
                 }
 
+                // for (entry of adjacencyGraph.entries()) {
+                //     console.log("--- dfs(" + entry[0] + ") ---");
+                //     dfs(entry[0])
+                // }
+
             });
-
-
-
-
         });
 </script>
 </head>
