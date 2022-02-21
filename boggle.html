@@ -83,11 +83,12 @@
                 return letters.join("");
             }
 
-            // standard graph algorithms (BFS, DFS) are not efficient because 
-            // of the exponential increase in cost as the grid expands.
-            // Finding EVERY route through a graph is expensive. 
+            LetterGrid.prototype.set_letters = function (letters) {
+                letterArray = Array.from(letters);
+                this.letters = letterArray.slice(0);
+            }
 
-            // Instead, we will try each word
+            // Look for each word in the grid, see if it has a path
             LetterGrid.prototype.find_word = function(word) {
                 // First Pass:
                 // before doing any graph traversal, 
@@ -126,7 +127,7 @@
 
                         for (neighbor of neighbors) {
                             if (this.letters[neighbor] == nextLetter) {
-                                console.log("nextLetter " + nextLetter + " was matched in " + neighbors);
+                                console.log("nextLetter " + nextLetter + " was matched in " + neighbors + " at cell " + neighbor);
                                 visited.push( neighbor );
                                 // the next letter was found
                                 startCell = neighbor;
@@ -261,7 +262,8 @@
                 return graph;
             }
 
-            // build the adjacency graph on page load, not on click
+            // build the adjacency graph on page load, not on click, since
+            // it is independent of the letters in the grid
             const adjacencyGraph = buildAdjacency();
             console.log("adjacencyGraph:");
             console.log(adjacencyGraph);
@@ -276,9 +278,27 @@
                 console.log(letterlist.slice(l * GRID_HEIGHT, l * GRID_HEIGHT + GRID_WIDTH))
             }
 
+            $('#lettergrid').on('input', function () {
+                // Check whether the grid's contents can be a valid aray of letters
+                var inputLetters =  $('#lettergrid').val().replace(/(\r\n|\n|\r)/gm,""); 
+                console.log(inputLetters.length);
+                if (inputLetters.length == GRID_HEIGHT * GRID_WIDTH){
+                    $('#lettergrid').css("background-color", "white");
+                    // Update the letters of the grid when the box contains the right number
+                    letterGrid.set_letters(inputLetters);
+                    var grid = fillGrid();
+                    $('#search').prop('disabled', false);
+                }
+                else{
+                    $('#search').prop('disabled', true);
+                    $('#lettergrid').css("background-color", "yellow");
+                }
+                
+                
+            });
+
             $('#shuffle').click(function () {
                 letterGrid = new LetterGrid();
-
                 letters = letterGrid.letters;
                 console.log("shuffled:");
                 console.log(letters);
@@ -322,6 +342,9 @@
                 <div class="row">
                     <button id="search" class="lead">Search</button>
                     <textarea id="wordbox"></textarea>
+                    <p>
+                        Separate words with commas, no spaces allowed.
+                    </p>
                 </div>
 
             </div>
