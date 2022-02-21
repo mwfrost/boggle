@@ -29,10 +29,15 @@
     $(document).ready(
         function () {
             //constants
+            // TODO: should these be encapsulated in the LetterGrid object?
             const GRID_WIDTH = 4;
             const GRID_HEIGHT = 4;
+            // TODO: enable the Boggle-like use of a "Qu" square
             const USE_QU_SQUARE = false;
+
             const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            // TODO: add a vector of weight factors to make the
+            // distribution of letters more like the cubes in Boggle
 
             // style the objects according to the constants
             $('#lettergrid').attr('cols', GRID_WIDTH);
@@ -53,9 +58,10 @@
                 wordlist = newlist.toUpperCase().split(",");
             });
 
-
-            // functions
+            
             class LetterGrid {
+                // Define the board object and its data
+
                 // using a constructor instead of just declaring the function
                 // allows repeated reshuffling
                 constructor() {
@@ -69,31 +75,36 @@
                                 ALPHABET.length))
                         );
                     }
-                    letters[0] = "A";
-                    letters[1] = "M";
+                    // hard-code the first two results for testing
+                    // letters[0] = "A";
+                    // letters[1] = "M";
                     this.letters = letters;
                     this.foundWords = [];
                     this.visitedPaths = [];
                 }
             }
 
+            
             LetterGrid.prototype.cells_to_string = function (cells) {
+                // convert cell index numbers to the corresponding letters
                 letters = [];
                 cells.forEach(cell => letters.push(this.letters[cell]));
                 return letters.join("");
             }
 
             LetterGrid.prototype.set_letters = function (letters) {
+                // change the grid's letters (in response to input)
                 letterArray = Array.from(letters);
                 this.letters = letterArray.slice(0);
             }
 
-            // Look for each word in the grid, see if it has a path
             LetterGrid.prototype.find_word = function(word) {
+                // Look for each word in the grid, return true if it has a path
+
                 // First Pass:
                 // before doing any graph traversal, 
                 // make sure that all the letters in
-                // the word are in the grid
+                // the word are in the grid. 
                 wordLetters=Array.from(word);
                 // TODO: check for the right number of each letter
                 missingLetters = wordLetters.filter(x => !this.letters.includes(x));
@@ -101,7 +112,9 @@
                     console.log("Skipping " + word + ": missing from the grid: " + missingLetters);
                     return false;
                 }
+                // Second Pass:
                 // The grid contains the letters somewhere, so now start testing adjacency
+
                 // There could be several cells where the word could start
                 startCells = [];
                 for (k of this.letters.keys()){
@@ -109,10 +122,8 @@
                         startCells.push(k)
                     }
                 }
-                console.log("Searching for '" + word + "'");
-
-                console.log("Starting letter " + wordLetters[0] + " found in " + startCells);
-                // Try to build the word from each potential starting point
+                console.log("Starting letter " + wordLetters[0] + " of " + word + " found in " + startCells);
+                // Try to build the word's path from each potential starting point
                 for (startCell of startCells) {
                     visited = [startCell];
 
@@ -123,7 +134,7 @@
                         var nextLetter = wordLetters[l+1]
                         
                         // can the word's next letter be found in the adjacent and unused neighbors?
-                        console.log("looking for " + nextLetter + " to follow " + wordLetters[l] + " in " + neighbors + " (" + neighborLetters + ")");
+                        // console.log("looking for " + nextLetter + " to follow " + wordLetters[l] + " in " + neighbors + " (" + neighborLetters + ")");
 
                         for (neighbor of neighbors) {
                             if (this.letters[neighbor] == nextLetter) {
@@ -148,41 +159,6 @@
 
             }
 
-            function dfs(start, visited = new Set()) {
-                // adapted from https://fireship.io/courses/javascript/interview-graphs/
-                visited.add(root);
-                // the neighbors are the adjacent nodes,
-                // exclusive of the ones that have already been visited
-                const neighbors = adjacencyGraph.get(root).filter(x => !visited.has(x));
-
-                let pathString = letterGrid.cells_to_string(visited);
-                console.log(pathString);
-
-                // if the current path is a match, score it
-                if (wordlist.includes(pathString)) {
-                    console.log(pathString + " found");
-                    letterGrid.foundWords.push(pathString);
-                    $('#found-words').html(letterGrid.foundWords.join(","));
-                }
-                for (const neighbor of neighbors) {
-                    console.log(Array.from(visited).join(":") + " --> " + neighbor);
-                    // loop over the neighbors of the current root node 
-                    if (!visited.has(neighbor)) {
-                        // if neighbor is not in the list of visited nodes, 
-                        // keep pursuing the chain of first-neighbor adjacencies
-                        dfs(neighbor, visited);
-                    }
-                    else {
-                        console.log("all neighbors of node " + root + " have been visited")
-                    }
-
-                }
-
-            }
-            // Recursively visit each node's first adjacent node
-
-
-
             function getCoordinatesByKey(key) {
                 // given a grid cell's key, return its x,y Cartesian location
                 // modulo syntax from 
@@ -206,6 +182,8 @@
 
 
             function getAdjacentCoordinates(rowcol) {
+                // find the neighbors of each cell by filtering out the 
+                // adjacent cells that are off the board
                 row = rowcol[0]
                 col = rowcol[1]
                 nearbypairs = [
@@ -219,7 +197,7 @@
                     [col + 1, row + 1]
                 ]
                 gridpairs = Array.from(keyCoordinates.values());
-                // using two loops is ugly but will do for now
+                // test each cooridnate pair to see if it's on the board
                 validpairs = []
                 for (let n = 0; n < nearbypairs.length; n++) {
                     for (let g = 0; g < gridpairs.length; g++) {
@@ -233,16 +211,16 @@
                 return validpairs;
             }
 
-            function fillGrid() {
+            LetterGrid.prototype.fill_grid = function() {
                 // turn the array of letters into a series of rows
                 displayLetters = "";
 
                 for (var k = 0; k < GRID_WIDTH * GRID_HEIGHT; k++) {
-                    xy = getCoordinatesByKey(letters, k)
+                    xy = getCoordinatesByKey(this.letters, k)
                 }
 
                 for (var r = 0; r < GRID_HEIGHT; r++) {
-                    displayLetters = displayLetters + letters.slice(r * GRID_WIDTH, r * GRID_WIDTH + GRID_WIDTH)
+                    displayLetters = displayLetters + this.letters.slice(r * GRID_WIDTH, r * GRID_WIDTH + GRID_WIDTH)
                         .join("") + "\n";
                 }
                 return displayLetters;
@@ -250,7 +228,8 @@
 
             function buildAdjacency() {
                 // for each key in the array, identify 
-                // which other keys it can be adjacent to
+                // which other keys it can be adjacent to.
+                // Resource used: https://adrianmejia.com/data-structures-for-beginners-graphs-time-complexity-tutorial/#Adjacency-List-Graph-HashMap-Implementation
                 var graph = new Map();
                 // iterate through the keys, assigning adjacent keys
                 for (var k = 0; k < GRID_WIDTH * GRID_HEIGHT; k++) {
@@ -270,8 +249,9 @@
 
             letterGrid = new LetterGrid();
             var letters = letterGrid.letters;
-            var grid = fillGrid();
+            var grid = letterGrid.fill_grid();
             $('#lettergrid').html(grid);
+            
             letterlist = letterGrid.cells_to_string([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             // rendering the grid to the console:
             for (var l = 0; l < GRID_HEIGHT; l++) {
@@ -286,7 +266,7 @@
                     $('#lettergrid').css("background-color", "white");
                     // Update the letters of the grid when the box contains the right number
                     letterGrid.set_letters(inputLetters);
-                    var grid = fillGrid();
+                    var grid = letterGrid.fill_grid();
                     $('#search').prop('disabled', false);
                 }
                 else{
@@ -302,7 +282,7 @@
                 letters = letterGrid.letters;
                 console.log("shuffled:");
                 console.log(letters);
-                var grid = fillGrid();
+                var grid = letterGrid.fill_grid();
                 $('#lettergrid').html(grid);
             });
 
