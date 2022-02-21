@@ -53,12 +53,6 @@
 
             $('#wordbox').html(wordlist.join(","));
 
-            $('#wordbox').on('input', function () {
-                newlist = $('#wordbox').val();
-                wordlist = newlist.toUpperCase().split(",");
-            });
-
-
             class LetterGrid {
                 // Define the board object and its data
 
@@ -138,21 +132,23 @@
 
                         for (neighbor of neighbors) {
                             if (this.letters[neighbor] == nextLetter) {
-                                console.log("nextLetter " + nextLetter + " was matched in " + neighbors +
-                                    " at cell " + neighbor);
                                 visited.push(neighbor);
-                                // the next letter was found
-                                startCell = neighbor;
-                                console.log(letterGrid.cells_to_string(visited));
+                                console.log("nextLetter " + nextLetter + " was matched in " + neighbors +
+                                    " at cell " + neighbor + ", making " + letterGrid.cells_to_string(visited));
 
+                                    if (letterGrid.cells_to_string(visited) === word) {
+                                        console.log("'" + letterGrid.cells_to_string(visited) + " matches " + word)
+                                        letterGrid.foundWords.push(letterGrid.cells_to_string(visited));
+                                        $('#found-words').html(letterGrid.foundWords.join(","));
+                                        return true;
+                                    }
+                                // the next letter was found, exit the loop of neighbors,
+                                // returning to the loop of letters
+                                startCell = neighbor;
+                                break;
+                                
                             }
                         }
-                        if (letterGrid.cells_to_string(visited) == word) {
-                            letterGrid.foundWords.push(letterGrid.cells_to_string(visited));
-                            $('#found-words').html(letterGrid.foundWords.join(","));
-                            return true;
-                        }
-
                     }
 
                 }
@@ -277,6 +273,15 @@
                 console.log(letters);
                 var grid = letterGrid.fill_grid();
                 $('#lettergrid').html(grid);
+            });
+
+            $('#wordbox').on('input', function () {
+                // regex reference
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
+                var cleanlist = $('#wordbox').val().replace(/(\s)/gm, "");
+                $('#wordbox').val(cleanlist);
+                newlist = $('#wordbox').val();
+                wordlist = newlist.toUpperCase().split(",");
             });
 
             $('#search').click(function () {
