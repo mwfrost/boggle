@@ -4,8 +4,10 @@ Given a 4x4 matrix of letters chosen randomly from A-Z (with replacement), and a
 
 ## Resources Used and Consulted
 
-<https://www.fgbradleys.com/rules/Boggle.pdf>
+The rules of Boggle: <https://www.fgbradleys.com/rules/Boggle.pdf>
 
-<https://adrianmejia.com/data-structures-for-beginners-graphs-time-complexity-tutorial/#Graphs-Basics>
+"Graph Data Structures in JavaScript for Beginners," from a tutorial on JavaScript data structures: <https://adrianmejia.com/data-structures-for-beginners-graphs-time-complexity-tutorial/#Graphs-Basics>
 
-<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder>
+Numerous entries here, as I translated Python syntax and data structures into JS: <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/>
+
+Several entries on the JQuery reference page, especially the CSS-assignment entry: <https://api.jquery.com/css/>
