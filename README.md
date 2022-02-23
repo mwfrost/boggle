@@ -10,3 +10,4 @@ The rules of Boggle: <https://www.fgbradleys.com/rules/Boggle.pdf>
 
 Numerous entries here, as I translated Python syntax and data structures into JS: <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/>
 
+Several entries on the JQuery reference page, especially the CSS-assignment entry: <https://api.jquery.com/css/>
